@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "CSQuery.h"
+#include <stdio.h>
 
 #define DB_HOST "127.0.0.1"
 #define DB_USER "root"
@@ -16,11 +17,19 @@ bool CSQuery::connect() {
 	// 연결 확인
 	if(!m_pConnection)
 		return true;
-	else // 연결 실패
+	else
 	{
 		fprintf(stderr, "Mysql connection error: %s", mysql_error(&conn));
 		return false;
 	}
+}
+
+void CSQuery::Query() {
+	//TODO: SQL 쿼리문을 수행한다. 스키마 생성, 릴레이션 생성, 튜플 삽입
+
+}
+void CSQuery::Print() {
+
 }
 
 
