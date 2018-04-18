@@ -9,8 +9,10 @@ private:
 	MYSQL_ROW sql_row;
 public:
 	bool connect();
-	void Query();
+	bool Progress();
 	void Print();
+private:
+	int Query(MYSQL *_pConnection, char *queryString = nullptr);
 public:
 	CSQuery();
 	~CSQuery();

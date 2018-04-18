@@ -1,11 +1,18 @@
 #include "stdafx.h"
 #include "CMainApp.h"
 
-bool CMainApp::connect()
+bool CMainApp::Simulator()
 {
-	if (this->MainSQL->connect())
-		return true;
+	// Check Connection
+	if (!MainSQL->connect()) 
+		return false;
 
+	// Do Progress
+	if (!MainSQL->Progress())
+		return false;
+
+	// Print
+	MainSQL->Print();
 	return true;
 }
 

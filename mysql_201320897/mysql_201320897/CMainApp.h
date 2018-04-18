@@ -6,7 +6,7 @@ class CMainApp
 private:
 	CSQuery* MainSQL;
 public:
-	bool connect();
+	bool Simulator();
 public:
 	CMainApp();
 	~CMainApp();
