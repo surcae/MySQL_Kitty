@@ -4,7 +4,7 @@ enum E_TABLE
 {
 	DEPARTMENT = 0,
 	EMPLOYEE,
-	DELP_LOCATIONS,
+	DEPT_LOCATIONS,
 	PROJECT,
 	WORKS_ON,
 	DEPENDENT,
@@ -22,7 +22,7 @@ public:
 	bool Print();
 private:
 	int Query(MYSQL *_pConnection, char *queryString = nullptr);
-	bool PrintHelper(int count, char *_string, E_TABLE myTable);
+	bool SelectAllFromTable(char *_string, E_TABLE myTable);
 public:
 	CSQuery();
 	~CSQuery();

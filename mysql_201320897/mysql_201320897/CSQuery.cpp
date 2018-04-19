@@ -55,6 +55,8 @@ bool CSQuery::Progress() {
 	/* CREATE TABLE 할 때 먼저 테이블이 만들어지지 않았는데
 	Constraint Foreign Key 셋팅이 들어가면 다른 테이블이 만들어지지 않은 상태라서 접근이 불가능하다.
 	일단 테이블의 기본 요소만 만들어놓은후 모든 테이블을 셋팅하고 나중에 ALTER TABLE 제약조건 ... 해서 외래키 설정을 해주자.
+	이런 경우 스키마가 좀 잘못 짜여져 있다고 하지만 외래키 셋팅을 나중에 해서 해결할 수도 있다.
+	다른 방법으로는 따로 테이블(n:m 처럼)을 만들어서 저장하는 방법이 있다. (이러면 테이블이 늘어나지만 쿼리가 빨라지고 셋팅도 바로 바로 가능)
 	*/
 
 	// DB가 이미 있으면 삭제하고 새로 시작한다.
@@ -120,7 +122,7 @@ bool CSQuery::Progress() {
 	QUERY(QUOTE(CREATE TABLE IF NOT EXISTS `COMPANYX`.`WORKS_ON` (
 		`Essn` CHAR(9) NOT NULL,
 		`Pno` INT NOT NULL,
-		`Hours` DECIMAL(3, 1), NOT NULL
+		`Hours` DECIMAL(3, 1) NOT NULL,
 		PRIMARY KEY(`Essn`, `Pno`),
 			INDEX `fk_Pno_idx` (`Pno` ASC))	ENGINE = InnoDB;
 	));
@@ -263,13 +265,33 @@ bool CSQuery::Progress() {
 	QUERY("INSERT INTO `COMPANYX`.`DEPENDENT` (`Essn`, `Dependent_name`, `Sex`, `Bdate`, `Relationship`) VALUES('123456789', 'Alice', 'F', '1988-12-30', 'Daughter');");
 	QUERY("INSERT INTO `COMPANYX`.`DEPENDENT` (`Essn`, `Dependent_name`, `Sex`, `Bdate`, `Relationship`) VALUES('123456789', 'Elizabeth', 'F', '1967-05-05', 'Spouse');");
 	printf("DEPENDENT 튜플 삽입완료\n\n");
+
+	printf("============================\n");
+	printf("쿼리문 수행\n");
 #pragma endregion
 
 	return true;
 }
 bool CSQuery::Print() {
 	// 과제에서 요구하는 쿼리와 강의노트에 있는 쿼리문들을 실행하고 결과를 보여주는 함수
+	// 1. SELECT * FROM <Relation name>;
+	if (!SelectAllFromTable("SELECT * FROM DEPARTMENT;", DEPARTMENT))
+		return false;
+	if (!SelectAllFromTable("SELECT * FROM EMPLOYEE;", EMPLOYEE))
+		return false;
+	if (!SelectAllFromTable("SELECT * FROM DEPT_LOCATIONS;", DEPT_LOCATIONS))
+		return false;
+	if (!SelectAllFromTable("SELECT * FROM PROJECT;", PROJECT))
+		return false;
+	if (!SelectAllFromTable("SELECT * FROM WORKS_ON;", WORKS_ON))
+		return false;
+	if (!SelectAllFromTable("SELECT * FROM DEPENDENT;", DEPENDENT))
+		return false;
+	printf("\n");
 
+	// 2. 강의노트 Chapter 4의 page 26 & 27에 있는 쿼리0, 1, 2
+
+		
 	return true;
 }
 
@@ -277,20 +299,90 @@ int CSQuery::Query(MYSQL * _pConnection, char * queryString) {
 	return mysql_query(_pConnection, queryString);
 }
 
-bool CSQuery::PrintHelper(int count, char *_string, E_TABLE myTable)
+bool CSQuery::SelectAllFromTable(char *_string, E_TABLE myTable)
 {
-	//쿼리 -> 결과 저장 -> 출력
-	QUERY(_string);
-	sql_result = mysql_store_result(m_pConnection);
-	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+	// 이렇게 짜면 정적인 출력문이 되어 나중에 Column 추가, 삭제되면 일일히 수정해줘야함. 매우 비효율적이라서 db로부터 column 갯수, 도메인 크기를 받아서 자동화 시킬 필요가 있음.
+	// for Select * from Table;
+	printf("%s\n", _string);
+	QUERY(_string); // 에러시 return false;
+	sql_result = mysql_store_result(m_pConnection); // 저장
 
+	/*
+	enum E_TABLE
+	{
+		DEPARTMENT = 0,
+		EMPLOYEE,
+		DEPT_LOCATIONS,
+		PROJECT,
+		WORKS_ON,
+		DEPENDENT,
+	};
+	*/
+
+	// Columns 목록 출력
+	switch (myTable) {
+	case DEPARTMENT:
+		printf("%20s %10s %15s %15s\n"
+			, "Dname", "Dnumber", "Mgr_ssn", "Mgr_start_date");
+		break;
+	case EMPLOYEE:
+		printf("%10s %6s %10s %12s %13s %30s %5s %10s %15s %5s\n"
+			, "Fname", "Minit", "Lname", "Ssn", "Bdate", "Address", "Sex", "Salary", "Super_ssn", "Dno");
+		break;
+	case DEPT_LOCATIONS:
+		printf("%5s %15s\n"
+			, "Dnumber", "Dlocation");
+		break;
+	case PROJECT:
+		printf("%20s %10s %15s %5s\n"
+			, "Pname", "Pnumber", "Plocation", "Dnum");
+		break;
+	case WORKS_ON:
+		printf("%15s %5s %10s\n"
+			, "Essn", "Pno", "Hours");
+		break;
+	case DEPENDENT:
+		printf("%15s %15s %5s %15s %15s\n"
+			, "Essn", "Dependent_name", "Sex", "Bdate", "Relationship");
+		break;
+	}
+
+	// 
+	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+		switch (myTable) {
+		case DEPARTMENT:
+			printf("%20s %10s %15s %15s\n"
+				, sql_row[0], sql_row[1], sql_row[2], sql_row[3]);
+			break;
+		case EMPLOYEE:
+			printf("%10s %6s %10s %12s %13s %30s %5s %10s %15s %5s\n"
+				, sql_row[0], sql_row[1], sql_row[2], sql_row[3], sql_row[4], sql_row[5]
+				, sql_row[6], sql_row[7], sql_row[8], sql_row[9]);
+			break;
+		case DEPT_LOCATIONS:
+			printf("%5s %15s\n"
+				, sql_row[0], sql_row[1]);
+			break;
+		case PROJECT:
+			printf("%20s %10s %15s %5s\n"
+				, sql_row[0], sql_row[1], sql_row[2], sql_row[3]);
+			break;
+		case WORKS_ON:
+			printf("%15s %5s %10s\n"
+				, sql_row[0], sql_row[1], sql_row[2]);
+			break;
+		case DEPENDENT:
+			printf("%15s %15s %5s %15s %15s\n"
+				, sql_row[0], sql_row[1], sql_row[2], sql_row[3], sql_row[4]);
+			break;
+		}
 	}
 
 	return true;
 }
 
 
-CSQuery::CSQuery() : m_pConnection(NULL)
+CSQuery::CSQuery() : m_pConnection(nullptr)
 {
 }
 
