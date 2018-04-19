@@ -61,7 +61,7 @@ bool CSQuery::Progress() {
 
 	// DB가 이미 있으면 삭제하고 새로 시작한다.
 	QUERY("DROP DATABASE IF EXISTS COMPANYX;");
-	printf("데이터베이스 생성유무확인완료");
+	printf("데이터베이스 생성유무확인완료\n");
 
 	// Database 생성 Name: COMPANYX
 	QUERY("CREATE DATABASE COMPANYX DEFAULT CHARACTER SET utf8 ;");
@@ -142,13 +142,6 @@ bool CSQuery::Progress() {
 	// 외래키 제약조건 추가
 	// ALTER TABLE 테이블명
 	// ADD [CONSTRAINT 제약조건명 ...]
-	QUERY(QUOTE(ALTER TABLE DEPARTMENT ADD 
-		CONSTRAINT `fk_Mgr_ssn`
-		FOREIGN KEY(`Mgr_ssn`)
-			REFERENCES `COMPANYX`.`EMPLOYEE` (`Ssn`)
-				ON DELETE NO ACTION
-				ON UPDATE NO ACTION));
-	printf("DEPARTMENT 제약조건(외래키) 연결완료\n");
 
 	QUERY(QUOTE(ALTER TABLE EMPLOYEE ADD 
 		CONSTRAINT `fk_Super_ssn`
@@ -201,6 +194,38 @@ bool CSQuery::Progress() {
 				ON DELETE NO ACTION
 				ON UPDATE NO ACTION));
 	printf("DEPENDENT 제약조건(외래키) 연결완료\n\n");
+#pragma endregion
+	#pragma region 튜플 삽입 코드
+	// 튜플들 삽입
+	// 참조 무결성을 지키기 위해 먼저 기본키들을 먼저 넣고 나중에 부족한 부분을 넣어준다
+
+	// DEPARTMENT
+	QUERY("INSERT INTO `COMPANYX`.`DEPARTMENT` (`Dname`, `Dnumber`, `Mgr_ssn`, `Mgr_start_date`) VALUES('Research', 5, '333445555', '1988-05-22');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPARTMENT` (`Dname`, `Dnumber`, `Mgr_ssn`, `Mgr_start_date`) VALUES('Administration', 4, '987654321', '1995-01-01');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPARTMENT` (`Dname`, `Dnumber`, `Mgr_ssn`, `Mgr_start_date`) VALUES('Headquarters', 1, '888665555', '1981-06-19');");
+	printf("DEPARTMENT 튜플 삽입완료\n");
+
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES ('John', 'B', 'Smith', '123456789', '1965-01-09', '731 Fondren, Houston, TX', 'M', 30000, 5); ");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Franklin', 'T', 'Wong', '333445555', '1955-12-08', '638 Voss, Houston, TX', 'M', 40000, 5);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Alicia', 'J', 'Zelaya', '999887777', '1968-01-19', '3321 Castle, Spring, TX', 'F', 25000, 4);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Jennifer', 'S', 'Wallace', '987654321', '1941-06-20', '291 Berry, Bellaire, TX', 'F', 43000, 4);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Ramesh', 'K', 'Narayan', '666884444', '1962-09-15', '975 Fire Oak, Humble, TX', 'M', 38000, 5);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Joyce', 'A', 'English', '453453453', '1972-07-31', '5631 Rice, Houston, TX', 'F', 25000, 5);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Ahmad', 'V', 'Jabbar', '987987987', '1969-03-29', '980 Dallas, Houston, TX', 'M', 25000, 4);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Super_ssn`, `Dno`) VALUES('James', 'E', 'Borg', '888665555', '1937-11-10', '450 Stone, Houston, TX', 'M', 55000, NULL, 1);"); // Super_ssn: NULL
+	printf("EMPLOYEE 튜W플 삽입완료\n");
+
+	// 상호 참조 해결을 위해서 여기서 제약조건 추가함
+	/*QUERY(QUOTE(ALTER TABLE DEPARTMENT ADD
+	CONSTRAINT `fk_Mgr_ssn`
+	FOREIGN KEY(`Mgr_ssn`)
+	REFERENCES `COMPANYX`.`EMPLOYEE` (`Ssn`)
+	ON DELETE NO ACTION
+	ON UPDATE NO ACTION));
+	printf("DEPARTMENT 제약조건(외래키) 연결완료\n");*/
+
+	
+	
 #pragma endregion
 
 	return true;
