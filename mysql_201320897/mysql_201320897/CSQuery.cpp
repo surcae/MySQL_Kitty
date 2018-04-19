@@ -5,7 +5,7 @@
 #define DB_HOST "127.0.0.1"
 #define DB_USER "root"
 #define DB_PASS "root"
-#define PORT 3306
+#define PORT 4306
 
 #define QUOTE(...) #__VA_ARGS__
 #define QUERY_ERROR fprintf(stderr, "Mysql query error: %s\n", mysql_error(&conn))
@@ -37,12 +37,10 @@ bool CSQuery::connect() {
 bool CSQuery::Progress() {
 	/*
 		[ Progress ]
-	0. 옵션 셋팅
 	1. 디비(스키마) 생성
 	2. 테이블 삽입
 	3. 외래키 설정(ALTER)
 	4. 튜플 삽입
-	5. 옵션 셋팅
 
 	# MySQL Server에 있는 DB는 해당 클래스 소멸자에서 DROP 구문 날려서 Database 원 상태로 복귀 시킴.
 	# 데이터 그대로 유지하고 싶으면 소멸자 내용 주석 처리하기 바람
@@ -122,7 +120,7 @@ bool CSQuery::Progress() {
 	QUERY(QUOTE(CREATE TABLE IF NOT EXISTS `COMPANYX`.`WORKS_ON` (
 		`Essn` CHAR(9) NOT NULL,
 		`Pno` INT NOT NULL,
-		`Hours` DECIMAL(3, 1) NOT NULL,
+		`Hours` DECIMAL(3, 1), NOT NULL
 		PRIMARY KEY(`Essn`, `Pno`),
 			INDEX `fk_Pno_idx` (`Pno` ASC))	ENGINE = InnoDB;
 	));
@@ -142,21 +140,6 @@ bool CSQuery::Progress() {
 	// 외래키 제약조건 추가
 	// ALTER TABLE 테이블명
 	// ADD [CONSTRAINT 제약조건명 ...]
-
-	QUERY(QUOTE(ALTER TABLE EMPLOYEE ADD 
-		CONSTRAINT `fk_Super_ssn`
-		FOREIGN KEY(`Super_ssn`)
-			REFERENCES `COMPANYX`.`EMPLOYEE` (`Ssn`)
-				ON DELETE NO ACTION
-				ON UPDATE NO ACTION));
-	QUERY(QUOTE(ALTER TABLE EMPLOYEE ADD
-		CONSTRAINT `fk_Dno`
-		FOREIGN KEY(`Dno`)
-			REFERENCES `COMPANYX`.`DEPARTMENT` (`Dnumber`)
-				ON DELETE NO ACTION
-				ON UPDATE NO ACTION));
-	printf("EMPLOYEE 제약조건(외래키) 연결완료\n");
-
 	QUERY(QUOTE(ALTER TABLE DEPT_LOCATIONS ADD 
 		CONSTRAINT `fk_Dnumber`
 		FOREIGN KEY(`Dnumber`)
@@ -198,44 +181,112 @@ bool CSQuery::Progress() {
 	#pragma region 튜플 삽입 코드
 	// 튜플들 삽입
 	// 참조 무결성을 지키기 위해 먼저 기본키들을 먼저 넣고 나중에 부족한 부분을 넣어준다
-
-	// DEPARTMENT
+	
 	QUERY("INSERT INTO `COMPANYX`.`DEPARTMENT` (`Dname`, `Dnumber`, `Mgr_ssn`, `Mgr_start_date`) VALUES('Research', 5, '333445555', '1988-05-22');");
 	QUERY("INSERT INTO `COMPANYX`.`DEPARTMENT` (`Dname`, `Dnumber`, `Mgr_ssn`, `Mgr_start_date`) VALUES('Administration', 4, '987654321', '1995-01-01');");
 	QUERY("INSERT INTO `COMPANYX`.`DEPARTMENT` (`Dname`, `Dnumber`, `Mgr_ssn`, `Mgr_start_date`) VALUES('Headquarters', 1, '888665555', '1981-06-19');");
 	printf("DEPARTMENT 튜플 삽입완료\n");
 
-	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES ('John', 'B', 'Smith', '123456789', '1965-01-09', '731 Fondren, Houston, TX', 'M', 30000, 5); ");
-	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Franklin', 'T', 'Wong', '333445555', '1955-12-08', '638 Voss, Houston, TX', 'M', 40000, 5);");
-	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Alicia', 'J', 'Zelaya', '999887777', '1968-01-19', '3321 Castle, Spring, TX', 'F', 25000, 4);");
-	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Jennifer', 'S', 'Wallace', '987654321', '1941-06-20', '291 Berry, Bellaire, TX', 'F', 43000, 4);");
-	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Ramesh', 'K', 'Narayan', '666884444', '1962-09-15', '975 Fire Oak, Humble, TX', 'M', 38000, 5);");
-	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Joyce', 'A', 'English', '453453453', '1972-07-31', '5631 Rice, Houston, TX', 'F', 25000, 5);");
-	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Dno`) VALUES('Ahmad', 'V', 'Jabbar', '987987987', '1969-03-29', '980 Dallas, Houston, TX', 'M', 25000, 4);");
-	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Super_ssn`, `Dno`) VALUES('James', 'E', 'Borg', '888665555', '1937-11-10', '450 Stone, Houston, TX', 'M', 55000, NULL, 1);"); // Super_ssn: NULL
-	printf("EMPLOYEE 튜W플 삽입완료\n");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Super_ssn`, `Dno`) VALUES('John', 'B', 'Smith', '123456789', '1965-01-09', '731 Fondren, Houston, TX', 'M', 30000, '333445555', 5);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Super_ssn`, `Dno`) VALUES('Franklin', 'T', 'Wong', '333445555', '1955-12-08', '638 Voss, Houston, TX', 'M', 40000, '888665555', 5);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Super_ssn`, `Dno`) VALUES('Alicia', 'J', 'Zelaya', '999887777', '1968-01-19', '3321 Castle, Spring, TX', 'F', 25000, '987654321', 4);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Super_ssn`, `Dno`) VALUES('Jennifer', 'S', 'Wallace', '987654321', '1941-06-20', '291 Berry, Bellaire, TX', 'F', 43000, '888665555', 4);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Super_ssn`, `Dno`) VALUES('Ramesh', 'K', 'Narayan', '666884444', '1962-09-15', '975 Fire Oak, Humble, TX', 'M', 38000, '333445555', 5);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Super_ssn`, `Dno`) VALUES('Joyce', 'A', 'English', '453453453', '1972-07-31', '5631 Rice, Houston, TX', 'F', 25000, '333445555', 5);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Super_ssn`, `Dno`) VALUES('Ahmad', 'V', 'Jabbar', '987987987', '1969-03-29', '980 Dallas, Houston, TX', 'M', 25000, '987654321', 4);");
+	QUERY("INSERT INTO `COMPANYX`.`EMPLOYEE` (`Fname`, `Minit`, `Lname`, `Ssn`, `Bdate`, `Address`, `Sex`, `Salary`, `Super_ssn`, `Dno`) VALUES('James', 'E', 'Borg', '888665555', '1937-11-10', '450 Stone, Houston, TX', 'M', 55000, NULL, 1);");
+	printf("EMPLOYEE 튜플 삽입완료\n\n");
+	
+	// 상호 참조 문제 해결을 위해서 여기서 제약조건 추가함
+	printf("상호참조 문제 해결을 위해 제약조건 연결\n");
 
-	// 상호 참조 해결을 위해서 여기서 제약조건 추가함
-	/*QUERY(QUOTE(ALTER TABLE DEPARTMENT ADD
+	QUERY(QUOTE(ALTER TABLE DEPARTMENT ADD
 	CONSTRAINT `fk_Mgr_ssn`
 	FOREIGN KEY(`Mgr_ssn`)
 	REFERENCES `COMPANYX`.`EMPLOYEE` (`Ssn`)
 	ON DELETE NO ACTION
 	ON UPDATE NO ACTION));
-	printf("DEPARTMENT 제약조건(외래키) 연결완료\n");*/
+	printf("DEPARTMENT 제약조건(외래키) 연결완료\n");
 
-	
-	
+	QUERY(QUOTE(ALTER TABLE EMPLOYEE ADD
+		CONSTRAINT `fk_Super_ssn`
+		FOREIGN KEY(`Super_ssn`)
+			REFERENCES `COMPANYX`.`EMPLOYEE` (`Ssn`)
+				ON DELETE NO ACTION
+				ON UPDATE NO ACTION));
+	QUERY(QUOTE(ALTER TABLE EMPLOYEE ADD
+		CONSTRAINT `fk_Dno`
+		FOREIGN KEY(`Dno`)
+			REFERENCES `COMPANYX`.`DEPARTMENT` (`Dnumber`)
+				ON DELETE NO ACTION
+				ON UPDATE NO ACTION));
+	printf("EMPLOYEE 제약조건(외래키) 연결완료\n\n");
+
+	QUERY("INSERT INTO `COMPANYX`.`DEPT_LOCATIONS` (`Dnumber`, `Dlocation`) VALUES(1, 'Houston');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPT_LOCATIONS` (`Dnumber`, `Dlocation`) VALUES(4, 'Stafford');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPT_LOCATIONS` (`Dnumber`, `Dlocation`) VALUES(5, 'Bellaire');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPT_LOCATIONS` (`Dnumber`, `Dlocation`) VALUES(5, 'Sugarland');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPT_LOCATIONS` (`Dnumber`, `Dlocation`) VALUES(5, 'Houston');");
+	printf("DEPT_LOCATIONS 튜플 삽입완료\n");
+
+	QUERY("INSERT INTO `COMPANYX`.`PROJECT` (`Pname`, `Pnumber`, `Plocation`, `Dnum`) VALUES('ProductX', 1, 'Bellaire', 5);");
+	QUERY("INSERT INTO `COMPANYX`.`PROJECT` (`Pname`, `Pnumber`, `Plocation`, `Dnum`) VALUES('ProductY', 2, 'Sugarland', 5);");
+	QUERY("INSERT INTO `COMPANYX`.`PROJECT` (`Pname`, `Pnumber`, `Plocation`, `Dnum`) VALUES('ProductZ', 3, 'Houston', 5);");
+	QUERY("INSERT INTO `COMPANYX`.`PROJECT` (`Pname`, `Pnumber`, `Plocation`, `Dnum`) VALUES('Computerization', 10, 'Stafford', 4);");
+	QUERY("INSERT INTO `COMPANYX`.`PROJECT` (`Pname`, `Pnumber`, `Plocation`, `Dnum`) VALUES('Reorganization', 20, 'Houston', 1);");
+	QUERY("INSERT INTO `COMPANYX`.`PROJECT` (`Pname`, `Pnumber`, `Plocation`, `Dnum`) VALUES('Newbenefits', 30, 'Stafford', 4);");
+	printf("PROJECT 튜플 삽입완료\n");
+
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('123456789', 1, 32.5);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('123456789', 2, 7.5);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('666884444', 3, 40.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('453453453', 1, 20.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('453453453', 2, 20.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('333445555', 2, 10.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('333445555', 3, 10.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('333445555', 10, 10.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('333445555', 20, 10.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('999887777', 30, 30.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('999887777', 10, 10.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('987987987', 10, 35.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('987987987', 30, 5.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('987654321', 30, 20.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('987654321', 20, 15.0);");
+	QUERY("INSERT INTO `COMPANYX`.`WORKS_ON` (`Essn`, `Pno`, `Hours`) VALUES('888665555', 20, 10);"); // Hours에 10을 넣어서 진행해주세요 from 조교.
+	printf("WORKS_ON 튜플 삽입완료\n");
+
+	QUERY("INSERT INTO `COMPANYX`.`DEPENDENT` (`Essn`, `Dependent_name`, `Sex`, `Bdate`, `Relationship`) VALUES('333445555', 'Alice', 'F', '1986-04-05', 'Daughter');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPENDENT` (`Essn`, `Dependent_name`, `Sex`, `Bdate`, `Relationship`) VALUES('333445555', 'Theodore', 'M', '1983-10-25', 'Son');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPENDENT` (`Essn`, `Dependent_name`, `Sex`, `Bdate`, `Relationship`) VALUES('333445555', 'Joy', 'F', '1958-05-03', 'Spouse');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPENDENT` (`Essn`, `Dependent_name`, `Sex`, `Bdate`, `Relationship`) VALUES('987654321', 'Abner', 'M', '1942-02-28', 'Spouse');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPENDENT` (`Essn`, `Dependent_name`, `Sex`, `Bdate`, `Relationship`) VALUES('123456789', 'Michael', 'M', '1988-01-04', 'Son');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPENDENT` (`Essn`, `Dependent_name`, `Sex`, `Bdate`, `Relationship`) VALUES('123456789', 'Alice', 'F', '1988-12-30', 'Daughter');");
+	QUERY("INSERT INTO `COMPANYX`.`DEPENDENT` (`Essn`, `Dependent_name`, `Sex`, `Bdate`, `Relationship`) VALUES('123456789', 'Elizabeth', 'F', '1967-05-05', 'Spouse');");
+	printf("DEPENDENT 튜플 삽입완료\n\n");
 #pragma endregion
 
 	return true;
 }
-void CSQuery::Print() {
+bool CSQuery::Print() {
+	// 과제에서 요구하는 쿼리와 강의노트에 있는 쿼리문들을 실행하고 결과를 보여주는 함수
 
+	return true;
 }
 
 int CSQuery::Query(MYSQL * _pConnection, char * queryString) {
 	return mysql_query(_pConnection, queryString);
+}
+
+bool CSQuery::PrintHelper(int count, char *_string, E_TABLE myTable)
+{
+	//쿼리 -> 결과 저장 -> 출력
+	QUERY(_string);
+	sql_result = mysql_store_result(m_pConnection);
+	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+
+	}
+
+	return true;
 }
 
 

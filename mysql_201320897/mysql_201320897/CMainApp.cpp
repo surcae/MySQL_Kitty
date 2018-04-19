@@ -12,7 +12,8 @@ bool CMainApp::Simulator()
 		return false;
 
 	// Print
-	MainSQL->Print();
+	if (!MainSQL->Print())
+		return false;
 	return true;
 }
 

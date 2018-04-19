@@ -1,5 +1,14 @@
 #pragma once
 #include <mysql.h>
+enum E_TABLE
+{
+	DEPARTMENT = 0,
+	EMPLOYEE,
+	DELP_LOCATIONS,
+	PROJECT,
+	WORKS_ON,
+	DEPENDENT,
+};
 
 class CSQuery
 {
@@ -10,9 +19,10 @@ private:
 public:
 	bool connect();
 	bool Progress();
-	void Print();
+	bool Print();
 private:
 	int Query(MYSQL *_pConnection, char *queryString = nullptr);
+	bool PrintHelper(int count, char *_string, E_TABLE myTable);
 public:
 	CSQuery();
 	~CSQuery();
