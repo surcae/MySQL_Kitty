@@ -1,3 +1,7 @@
-﻿  CSQuery.cpp
+﻿  stdafx.cpp
+  mysql201320897.cpp
+  CSQuery.cpp
+  CMainApp.cpp
+  코드를 생성하고 있습니다...
   mysql_201320897.vcxproj -> C:\Users\surca\Desktop\Work\Database\mysql_201320897\x64\Debug\mysql_201320897.exe
   mysql_201320897.vcxproj -> C:\Users\surca\Desktop\Work\Database\mysql_201320897\x64\Debug\mysql_201320897.pdb (Partial PDB)
