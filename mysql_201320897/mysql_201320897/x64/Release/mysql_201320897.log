@@ -1,8 +1,9 @@
-﻿  CMainApp.cpp
+﻿  stdafx.cpp
+  CMainApp.cpp
   CSQuery.cpp
   mysql201320897.cpp
   코드를 생성하고 있습니다.
-  All 16 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  All 19 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   코드를 생성했습니다.
   mysql_201320897.vcxproj -> C:\Users\surca\Desktop\Work\Database\mysql_201320897\x64\Release\mysql_201320897.exe
   mysql_201320897.vcxproj -> C:\Users\surca\Desktop\Work\Database\mysql_201320897\x64\Release\mysql_201320897.pdb (Full PDB)

@@ -2,11 +2,17 @@
 #include "CSQuery.h"
 #include <stdio.h>
 
+// 제작자 컴퓨터일 경우 주석 풀기
+//#define MYCOM 
+
+// 공용
 #define DB_HOST "127.0.0.1"
+// 본인 컴퓨터용
 #define DB_USER "root"
 #define DB_PASS "root"
 #define PORT 4306
 
+// 매크로
 #define QUOTE(...) #__VA_ARGS__
 #define QUERY_ERROR fprintf(stderr, "Mysql query error: %s\n", mysql_error(&conn))
 #define QUERY_BEHAVIOR(String) Query(this->m_pConnection, String) != 0 
@@ -18,12 +24,26 @@
 bool CSQuery::connect() {
 	// 초기화, 연결 수행
 	mysql_init(m_pConnection);
-
+	#ifdef MYCOM
 	m_pConnection = mysql_real_connect(&conn, DB_HOST,
 		DB_USER, DB_PASS, NULL, PORT, (char *)NULL, 0);
 
-	printf("MySQL client version: %s\n============================\n", mysql_get_client_info());
+	printf("MySQL client version: %s\n", mysql_get_client_info());
+	printf("============================\n");
+#endif
+	#ifndef MYCOM
+	char ID[30], PW[30];
+	int port_number = NULL;
 
+	printf("MySQL client version: %s\n", mysql_get_client_info());
+	printf("USER ID : "); scanf_s("%s", ID, (unsigned int)sizeof(ID));
+	printf("PASSWORD: "); scanf_s("%s", PW, (unsigned int)sizeof(PW));
+	printf("PORT NUMBER: "); scanf_s("%4d", &port_number);
+	printf("============================\n");
+
+	m_pConnection = mysql_real_connect(&conn, DB_HOST,
+		ID, PW, NULL, (unsigned int)port_number, (char *)NULL, 0);
+#endif
 	// 연결 확인
 	if (m_pConnection)
 		return true;
