@@ -80,7 +80,7 @@ bool CSQuery::Progress() {
 		`Mgr_start_date` DATE NULL,
 		PRIMARY KEY(`Dnumber`),
 			UNIQUE INDEX `Dname_UNIQUE` (`Dname` ASC),
-			INDEX `fk_Mgr_ssn_idx` (`Mgr_ssn` ASC)) ENGINE = InnoDB;
+			INDEX `fk_Mgr_ssn_idx` (`Mgr_ssn` ASC)); //ENGINE = InnoDB;
 	));
 	printf("DEPARTMENT 테이블 생성완료\n");
 
@@ -97,14 +97,14 @@ bool CSQuery::Progress() {
 		`Dno` INT NOT NULL,
 		PRIMARY KEY(`Ssn`),
 			INDEX `fk_Super_ssn_idx` (`Super_ssn` ASC),
-			INDEX `fk_Dno_idx` (`Dno` ASC)) ENGINE = InnoDB;
+			INDEX `fk_Dno_idx` (`Dno` ASC)); //ENGINE = InnoDB;
 	));
 	printf("EMPLOYEE 테이블 생성완료\n");
 
 	QUERY(QUOTE(CREATE TABLE IF NOT EXISTS `COMPANYX`.`DEPT_LOCATIONS` (
 		`Dnumber` INT NOT NULL,
 		`Dlocation` VARCHAR(15) NOT NULL,
-		PRIMARY KEY(`Dnumber`, `Dlocation`)) ENGINE = InnoDB;
+		PRIMARY KEY(`Dnumber`, `Dlocation`)); //ENGINE = InnoDB;
 	));
 	printf("DELP_LOCATIONS 테이블 생성완료\n");
 
@@ -115,7 +115,7 @@ bool CSQuery::Progress() {
 		`Dnum` INT NOT NULL,
 		PRIMARY KEY(`Pnumber`),
 			UNIQUE INDEX `Pname_UNIQUE` (`Pname` ASC),
-			INDEX `fk_Dnum_idx` (`Dnum` ASC)) ENGINE = InnoDB;
+			INDEX `fk_Dnum_idx` (`Dnum` ASC)); //ENGINE = InnoDB;
 	));
 	printf("PROJECT 테이블 생성완료\n");
 
@@ -124,7 +124,7 @@ bool CSQuery::Progress() {
 		`Pno` INT NOT NULL,
 		`Hours` DECIMAL(3, 1) NOT NULL,
 		PRIMARY KEY(`Essn`, `Pno`),
-			INDEX `fk_Pno_idx` (`Pno` ASC))	ENGINE = InnoDB;
+			INDEX `fk_Pno_idx` (`Pno` ASC)); //ENGINE = InnoDB;
 	));
 	printf("WORKS_ON 테이블 생성완료\n");
 
@@ -134,7 +134,7 @@ bool CSQuery::Progress() {
 		`Sex` CHAR NULL,
 		`Bdate` DATE NULL,
 		`Relationship` VARCHAR(8) NULL,
-		PRIMARY KEY(`Essn`, `Dependent_name`)) ENGINE = InnoDB;
+		PRIMARY KEY(`Essn`, `Dependent_name`)); //ENGINE = InnoDB;
 	));
 	printf("DEPENDENT 테이블 생성완료\n\n");
 #pragma endregion
@@ -274,7 +274,9 @@ bool CSQuery::Progress() {
 }
 bool CSQuery::Print() {
 	// 과제에서 요구하는 쿼리와 강의노트에 있는 쿼리문들을 실행하고 결과를 보여주는 함수
+	#pragma region 질의1
 	// 1. SELECT * FROM <Relation name>;
+	printf("###첫번째 쿼리###\n");
 	if (!SelectAllFromTable("SELECT * FROM DEPARTMENT;", DEPARTMENT))
 		return false;
 	if (!SelectAllFromTable("SELECT * FROM EMPLOYEE;", EMPLOYEE))
@@ -288,10 +290,107 @@ bool CSQuery::Print() {
 	if (!SelectAllFromTable("SELECT * FROM DEPENDENT;", DEPENDENT))
 		return false;
 	printf("\n");
-
+#pragma endregion
+	#pragma region 질의2
 	// 2. 강의노트 Chapter 4의 page 26 & 27에 있는 쿼리0, 1, 2
+	// 2-1 쿼리0
+	printf("###두번째 쿼리###\n");
+	printf("%s\n", "SELECT Bdate, Address FROM EMPLOYEE WHERE Fname='John' AND Minit='B' AND Lname='Smith';");
+	QUERY("SELECT Bdate, Address FROM EMPLOYEE WHERE Fname='John' AND Minit='B' AND Lname='Smith';");
+	sql_result = mysql_store_result(m_pConnection); // 저장
 
-		
+	printf("%15s %35s\n", "Bdate", "Address");
+	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+		printf("%15s %35s\n", sql_row[0], sql_row[1]);
+	}
+
+	// 2-2 쿼리1
+	printf("%s\n", "SELECT Fname, Lname, Address FROM EMPLOYEE, DEPARTMENT WHERE Dname='Research' AND Dnumber=Dno;");
+	QUERY("SELECT Fname, Lname, Address FROM EMPLOYEE, DEPARTMENT WHERE Dname='Research' AND Dnumber=Dno;");
+	sql_result = mysql_store_result(m_pConnection); // 저장
+
+	printf("%10s %10s %35s\n", "Fname", "Lname", "Address");
+	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+		printf("%10s %10s %35s\n", sql_row[0], sql_row[1], sql_row[2]);
+	}
+
+	// 2-3 쿼리2
+	printf("%s\n", "SELECT Pnumber, Dnum, Lname, Address, Bdate FROM PROJECT, DEPARTMENT, EMPLOYEE WHERE Dnum=Dnumber AND Mgr_ssn=Ssn AND Plocation='Stafford';");
+	QUERY("SELECT Pnumber, Dnum, Lname, Address, Bdate FROM PROJECT, DEPARTMENT, EMPLOYEE WHERE Dnum=Dnumber AND Mgr_ssn=Ssn AND Plocation='Stafford';");
+	sql_result = mysql_store_result(m_pConnection); // 저장
+
+	printf("%10s %5s %10s %35s %15s\n", "Pnumber", "Dnum", "Lname", "Address", "Bdate");
+	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+		printf("%10s %5s %10s %35s %15s\n", sql_row[0], sql_row[1], sql_row[2], sql_row[3], sql_row[4]);
+	}
+	printf("\n");
+#pragma endregion
+	#pragma region 질의3
+	// 3. 강의노트 Chapter 4의 page 35(33쪽)에 있는 쿼리4
+	printf("###세번째 쿼리###\n");
+	printf("%s\n%s\n%s\n",
+		"(SELECT DISTINCT Pnumber FROM PROJECT, DEPARTMENT, EMPLOYEE WHERE Dnum=Dnumber AND Mgr_ssn=Ssn AND Lname='Smith')",
+		"UNION",
+		"(SELECT DISTINCT Pnumber FROM PROJECT, WORKS_ON, EMPLOYEE WHERE Pnumber=Pno AND Essn=Ssn AND Lname='Smith');"
+	);
+	QUERY(QUOTE(
+		(SELECT DISTINCT Pnumber FROM PROJECT, DEPARTMENT, EMPLOYEE WHERE Dnum = Dnumber AND Mgr_ssn = Ssn AND Lname = 'Smith')
+		UNION
+		(SELECT DISTINCT Pnumber FROM PROJECT, WORKS_ON, EMPLOYEE WHERE Pnumber = Pno AND Essn = Ssn AND Lname = 'Smith');
+	));
+	sql_result = mysql_store_result(m_pConnection); // 저장
+	printf("%6s\n", "Pnumber");
+	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+		printf("%6s\n", sql_row[0]);
+	}
+	printf("\n");
+#pragma endregion
+	#pragma region 질의4
+	// 4. 강의노트 Chapter 5의 page 20에 있는 쿼리20, 21, 22와 page 22에 있는 쿼리28 - from 절에 "Join"을 사용하지 않음
+	// 4-1 쿼리20
+	printf("###네번째 쿼리###(Join 사용X)\n");
+	printf("%s\n", "SELECT SUM(Salary), MAX(Salary), MIN(Salary), AVG(Salary) FROM EMPLOYEE, DEPARTMENT WHERE Dname='Research';");
+	QUERY("SELECT SUM(Salary), MAX(Salary), MIN(Salary), AVG(Salary) FROM EMPLOYEE, DEPARTMENT WHERE Dname='Research';");
+	sql_result = mysql_store_result(m_pConnection); // 저장
+	printf("%15s %15s %15s %15s\n", "SUM(Salary)", "MAX(Salary)", "MIN(Salary)", "AVG(Salary)");
+	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+		printf("%15s %15s %15s %15s\n", sql_row[0], sql_row[1], sql_row[2], sql_row[3]);
+	}
+
+	// 4-2 쿼리21
+	printf("%s\n", "SELECT COUNT(*) FROM EMPLOYEE;");
+	QUERY("SELECT COUNT(*) FROM EMPLOYEE;");
+	sql_result = mysql_store_result(m_pConnection); // 저장
+	printf("%15s\n", "COUNT(*)");
+	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+		printf("%15s\n", sql_row[0]);
+	}
+
+	// 4-3 쿼리22
+	printf("%s\n", "SELECT COUNT(*) FROM EMPLOYEE, DEPARTMENT WHERE DNO=DNUMBER AND DNAME='Research';");
+	QUERY("SELECT COUNT(*) FROM EMPLOYEE, DEPARTMENT WHERE DNO=DNUMBER AND DNAME='Research';");
+	sql_result = mysql_store_result(m_pConnection); // 저장
+	printf("%15s\n", "COUNT(*)");
+	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+		printf("%15s\n", sql_row[0]);
+	}
+
+	// 4-4 쿼리28
+	printf("%s\n", QUOTE(
+		SELECT Dnumber, COUNT(*) FROM DEPARTMENT, EMPLOYEE WHERE Dnumber = Dno AND Salary > 40000 AND
+		(SELECT Dno FROM EMPLOYEE GROUP BY Dno HAVING COUNT(*) > 5);
+	));
+	QUERY(QUOTE(
+		SELECT Dnumber, COUNT(*) FROM DEPARTMENT, EMPLOYEE WHERE Dnumber = Dno AND Salary > 40000 AND
+		(SELECT Dno FROM EMPLOYEE GROUP BY Dno HAVING COUNT(*) > 5);
+	));
+	sql_result = mysql_store_result(m_pConnection); // 저장
+	printf("%15s %15s\n", "Dnumber", "COUNT(*)");
+	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
+		printf("%15s %15s\n", sql_row[0], sql_row[1]);
+	}
+	printf("\n");
+#pragma endregion
 	return true;
 }
 
